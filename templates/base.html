@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Berber Randevu Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+    <!-- Mobile Nav Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <button class="mobile-nav-drawer-close" onclick="closeMobileNav()" aria-label="Kapat">✕</button>
+        <a href="/" onclick="closeMobileNav()">🏠 Ana Sayfa</a>
+        {% if session.get('user_id') %}
+            <a href="/dashboard" onclick="closeMobileNav()">📋 Panel</a>
+            <a href="/logout" onclick="closeMobileNav()">🚪 Çıkış Yap</a>
+        {% else %}
+            <a href="/login" onclick="closeMobileNav()">🔑 Giriş</a>
+        {% endif %}
+        <button class="theme-btn-mobile" id="themeToggleMobile">🌓 Tema Değiştir</button>
+    </div>
+
+    <nav class="navbar glass">
+        <a href="/" class="nav-brand">✂️ Berberim</a>
+        <div class="nav-links">
+            <a href="/">Ana Sayfa</a>
+            {% if session.get('user_id') %}
+                <a href="/dashboard">Panel</a>
+                <a href="/logout">Çıkış Yap</a>
+            {% else %}
+                <a href="/login">Giriş</a>
+            {% endif %}
+            <button id="themeToggle" class="btn" style="padding: 0.45rem 0.65rem; margin-left: 0.75rem; background: transparent; border: 1px solid var(--border-color); color: var(--text-color);">🌓</button>
+        </div>
+        <!-- Hamburger (mobile only) -->
+        <button class="nav-hamburger" id="hamburgerBtn" aria-label="Menü aç" onclick="openMobileNav()">☰</button>
+    </nav>
+
+    <div class="container animate-fade-in">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Theme toggle (desktop)
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        // Theme toggle (mobile drawer)
+        document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+        }
+
+        function openMobileNav() {
+            document.getElementById('mobileNavDrawer').classList.add('open');
+            document.getElementById('mobileNavOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileNav() {
+            document.getElementById('mobileNavDrawer').classList.remove('open');
+            document.getElementById('mobileNavOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // Close drawer on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileNav();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

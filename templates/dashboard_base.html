@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.dashboard-nav a:hover {
+    background: rgba(255,255,255,0.1) !important;
+    color: var(--primary-color) !important;
+}
+.dashboard-nav a.danger-nav:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+}
+/* Collapsible sidebar on mobile */
+.sidebar-toggle {
+    display: none;
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-color);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 0.75rem;
+    transition: background 0.2s;
+}
+.sidebar-toggle:hover {
+    background: rgba(255,255,255,0.12);
+}
+.sidebar-content {
+    /* visible by default */
+}
+@media (max-width: 600px) {
+    .sidebar-toggle {
+        display: block;
+    }
+    .sidebar-content.collapsed {
+        display: none;
+    }
+}
+</style>
+<div class="dashboard-layout">
+    <div class="sidebar glass" style="align-self: flex-start;">
+
+        <!-- Mobile collapse toggle -->
+        <button class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()">➕ Hızlı Randevu Ekle</button>
+
+        <!-- Hızlı Randevu Formu -->
+        <div class="sidebar-content collapsed" id="sidebarContent">
+            <h4 style="margin-bottom: 0.75rem; color: var(--secondary-color);">Hızlı Randevu Ekle</h4>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">Telefonla arayan müşteriler için kendi takviminize manuel randevu oluşturun.</p>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="font-size: 0.9rem;">Tarih Seçin</label>
+                <input type="date" id="quickDateSelect" class="form-control" style="font-size: 0.9rem;">
+            </div>
+            
+            <div id="quickSlotsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                <!-- Slots will be populated here -->
+            </div>
+            
+            <div id="quickBookingForm" style="display: none; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
+                <input type="hidden" id="quickSelectedTime">
+                <p style="font-size: 0.85rem; margin-bottom: 0.5rem;">Seçilen Saat: <strong id="quickSelectedTimeDisplay" style="color: var(--primary-color);"></strong></p>
+                
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <input type="text" id="quickCustomerName" class="form-control" placeholder="Müşteri Adı" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <input type="tel" id="quickCustomerPhone" class="form-control" placeholder="Telefon No" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <select id="quickServiceType" class="form-control" required>
+                        <option value="Sadece Saç Kesimi">Sadece Saç Kesimi</option>
+                        <option value="Sadece Sakal Kesimi">Sadece Sakal Kesimi</option>
+                        <option value="Saç ve Sakal Kesimi (Yıkamasız)">Saç ve Sakal Kesimi (Yıkamasız)</option>
+                        <option value="Saç ve Sakal Kesimi (Yıkamalı)">Saç ve Sakal Kesimi (Yıkamalı)</option>
+                        <option value="Çocuk Tıraşı">Çocuk Tıraşı</option>
+                    </select>
+                </div>
+                <button id="quickBookBtn" class="btn btn-primary" style="width: 100%;">Randevuyu Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content glass" style="flex: 1; min-width: 0;">
+        <div class="dashboard-nav" style="display: flex; gap: 0.6rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <a href="/dashboard" class="btn" style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.9rem; font-size: 0.88rem; flex: 1; min-width: 0;">📋 Randevularım</a>
+            <a href="/dashboard/profile" class="btn" style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.9rem; font-size: 0.88rem; flex: 1; min-width: 0;">👤 Profil</a>
+            {% if session.get('role') == 'admin' %}
+            <a href="/dashboard/employees" class="btn" style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.9rem; font-size: 0.88rem; flex: 1; min-width: 0;">👥 Çalışanlar</a>
+            <a href="/dashboard/settings" class="btn" style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.9rem; font-size: 0.88rem; flex: 1; min-width: 0;">⚙️ Ayarlar</a>
+            {% endif %}
+            <a href="/logout" class="btn danger-nav" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.5rem 0.9rem; font-size: 0.88rem; flex: 1; min-width: 0;">🚪 Çıkış</a>
+        </div>
+        {% block dashboard_content %}{% endblock %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dateSelect = document.getElementById('quickDateSelect');
+        const slotsContainer = document.getElementById('quickSlotsContainer');
+        const bookingForm = document.getElementById('quickBookingForm');
+        const timeInput = document.getElementById('quickSelectedTime');
+        const timeDisplay = document.getElementById('quickSelectedTimeDisplay');
+        const bookBtn = document.getElementById('quickBookBtn');
+        
+        const barberId = "{{ session.get('user_id') }}";
+        
+        // Min date is today
+        const todayStr = new Date().toISOString().split('T')[0];
+        dateSelect.min = todayStr;
+        dateSelect.value = todayStr;
+
+        function fetchQuickSlots() {
+            const date = dateSelect.value;
+            if(!date) return;
+            
+            slotsContainer.innerHTML = '<p style="font-size:0.85rem;">Yükleniyor...</p>';
+            bookingForm.style.display = 'none';
+            
+            fetch(`/api/availability?barber_id=${barberId}&date=${date}`)
+                .then(res => res.json())
+                .then(data => {
+                    slotsContainer.innerHTML = '';
+                    if(data.available_slots && data.available_slots.length > 0) {
+                        data.available_slots.forEach(slot => {
+                            const btn = document.createElement('button');
+                            btn.className = 'btn';
+                            btn.style.background = 'rgba(255,255,255,0.1)';
+                            btn.style.border = '1px solid var(--border-color)';
+                            btn.style.color = 'var(--text-color)';
+                            btn.style.padding = '0.4rem';
+                            btn.style.fontSize = '0.85rem';
+                            btn.textContent = slot;
+                            
+                            btn.onclick = () => {
+                                // Reset all
+                                Array.from(slotsContainer.children).forEach(c => {
+                                    c.style.background = 'rgba(255,255,255,0.1)';
+                                    c.style.borderColor = 'var(--border-color)';
+                                });
+                                // Highlight
+                                btn.style.background = 'var(--primary-color)';
+                                btn.style.borderColor = 'var(--primary-color)';
+                                
+                                timeInput.value = slot;
+                                timeDisplay.textContent = slot;
+                                bookingForm.style.display = 'block';
+                            };
+                            
+                            slotsContainer.appendChild(btn);
+                        });
+                    } else {
+                        slotsContainer.innerHTML = '<p style="font-size:0.85rem; color: #ef4444;">Boş saat yok.</p>';
+                    }
+                })
+                .catch(err => {
+                    slotsContainer.innerHTML = '<p style="font-size:0.85rem;">Hata oluştu.</p>';
+                });
+        }
+
+        dateSelect.addEventListener('change', fetchQuickSlots);
+        
+        bookBtn.onclick = () => {
+            const name = document.getElementById('quickCustomerName').value;
+            const phone = document.getElementById('quickCustomerPhone').value;
+            const service = document.getElementById('quickServiceType').value;
+            const date = dateSelect.value;
+            const time = timeInput.value;
+            
+            if(!name || !phone) {
+                alert('Lütfen ad ve telefon bilgilerini girin.');
+                return;
+            }
+            
+            bookBtn.disabled = true;
+            bookBtn.textContent = 'Kaydediliyor...';
+            
+            fetch('/api/book', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    barber_id: barberId,
+                    name: name,
+                    phone: phone,
+                    service: service,
+                    date: date,
+                    time: time
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Randevu başarıyla eklendi!');
+                    location.reload(); // Sayfayı yenile ki randevu listede görünsün
+                } else {
+                    alert(data.error || 'Bir hata oluştu.');
+                    bookBtn.disabled = false;
+                    bookBtn.textContent = 'Randevuyu Kaydet';
+                    fetchQuickSlots();
+                }
+            });
+        };
+
+        // Initial fetch
+        if(barberId) {
+            fetchQuickSlots();
+        }
+    });
+
+    // Sidebar collapsible (mobile)
+    window.toggleSidebar = function() {
+        const content = document.getElementById('sidebarContent');
+        const btn = document.getElementById('sidebarToggleBtn');
+        const isCollapsed = content.classList.toggle('collapsed');
+        btn.textContent = isCollapsed ? '➕ Hızlı Randevu Ekle' : '➖ Randevuyu Gizle';
+        if (!isCollapsed && barberId) {
+            fetchQuickSlots();
+        }
+    };
+
+    // On desktop, always show sidebar content
+    function checkSidebarVisibility() {
+        if (window.innerWidth > 600) {
+            document.getElementById('sidebarContent').classList.remove('collapsed');
+        } else {
+            // Keep collapsed by default on mobile unless user opened it
+        }
+    }
+    checkSidebarVisibility();
+    window.addEventListener('resize', checkSidebarVisibility);
+</script>
+{% endblock %}

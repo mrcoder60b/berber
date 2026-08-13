@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="glass" style="max-width: 800px; margin: 2rem auto; padding: 2rem;">
+    <h2 style="text-align: center; margin-bottom: 0.5rem;">{{ barber.name }} - Randevu Takvimi</h2>
+    <p style="text-align: center; margin-bottom: 2rem; color: var(--primary-color); font-weight: 600;">
+        {{ 'Usta' if barber.role == 'admin' else 'Çalışan' }}
+    </p>
+
+    <div class="alert alert-warning" style="text-align: center;">
+        <strong>Önemli:</strong> Lütfen randevu saatinizden 15 dakika önce dükkanda olunuz. Geç kalmanız durumunda randevunuz iptal edilebilir.
+    </div>
+
+    <div class="form-group">
+        <label for="dateSelect">Tarih Seçin</label>
+        <input type="date" id="dateSelect" class="form-control">
+    </div>
+
+    <div id="slotsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+        <!-- Slots will be populated here -->
+    </div>
+
+    <div id="bookingForm" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+        <h3>Randevu Bilgileri (<span id="selectedTimeDisplay"></span>)</h3>
+        <input type="hidden" id="selectedTime">
+        
+        <div class="form-group">
+            <label for="customerName">Ad Soyad</label>
+            <input type="text" id="customerName" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="customerPhone">Telefon Numarası</label>
+            <input type="tel" id="customerPhone" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="serviceType">Hizmet Seçimi</label>
+            <select id="serviceType" class="form-control" required>
+                <option value="Sadece Saç Kesimi">Sadece Saç Kesimi</option>
+                <option value="Sadece Sakal Kesimi">Sadece Sakal Kesimi</option>
+                <option value="Saç ve Sakal Kesimi (Yıkamasız)">Saç ve Sakal Kesimi (Yıkamasız)</option>
+                <option value="Saç ve Sakal Kesimi (Yıkamalı)">Saç ve Sakal Kesimi (Yıkamalı)</option>
+                <option value="Çocuk Tıraşı">Çocuk Tıraşı</option>
+            </select>
+        </div>
+        
+        <button id="bookBtn" class="btn btn-primary" style="width: 100%;">Randevu Al</button>
+    </div>
+</div>
+
+<style>
+/* Geçmiş saat butonu stili */
+.slot-past {
+    position: relative;
+    opacity: 0.45;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    background: rgba(255,255,255,0.04) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+    color: #64748b !important;
+}
+/* Kırmızı çapraz çizgi */
+.slot-past::before,
+.slot-past::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 8%;
+    width: 84%;
+    height: 2px;
+    background: rgba(239, 68, 68, 0.75);
+    border-radius: 2px;
+    transform-origin: center;
+}
+.slot-past::before {
+    transform: translateY(-50%) rotate(12deg);
+}
+.slot-past::after {
+    transform: translateY(-50%) rotate(-12deg);
+}
+
+/* Dolu saat butonu */
+.slot-booked {
+    opacity: 0.38;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    color: #ef4444 !important;
+    text-decoration: line-through;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dateSelect = document.getElementById('dateSelect');
+    const slotsContainer = document.getElementById('slotsContainer');
+    const bookingForm = document.getElementById('bookingForm');
+    const selectedTimeInput = document.getElementById('selectedTime');
+    const selectedTimeDisplay = document.getElementById('selectedTimeDisplay');
+    const bookBtn = document.getElementById('bookBtn');
+    
+    const today = new Date().toISOString().split('T')[0];
+    dateSelect.min = today;
+    dateSelect.value = today;
+    
+    const barberId = {{ barber.id }};
+    
+    function fetchSlots() {
+        const date = dateSelect.value;
+        if(!date) return;
+        
+        slotsContainer.innerHTML = '<p>Yükleniyor...</p>';
+        bookingForm.style.display = 'none';
+        
+        fetch(`/api/availability?barber_id=${barberId}&date=${date}`)
+            .then(res => res.json())
+            .then(data => {
+                slotsContainer.innerHTML = '';
+
+                // Geçmiş saatler — çizgili ve tıklanamaz
+                if (data.past_slots && data.past_slots.length > 0) {
+                    data.past_slots.forEach(slot => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn slot-past';
+                        btn.textContent = slot;
+                        btn.disabled = true;
+                        btn.title = 'Bu saat geçmiştir, randevu alınamaz';
+                        slotsContainer.appendChild(btn);
+                    });
+                }
+
+                // Müsait saatler — normal, tıklanabilir
+                if(data.available_slots && data.available_slots.length > 0) {
+                    data.available_slots.forEach(slot => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn';
+                        btn.style.background = 'rgba(255,255,255,0.1)';
+                        btn.style.border = '1px solid var(--border-color)';
+                        btn.style.color = 'var(--text-color)';
+                        btn.textContent = slot;
+                        btn.onclick = () => selectSlot(slot, btn);
+                        slotsContainer.appendChild(btn);
+                    });
+                }
+
+                // Hiç saat yoksa mesaj
+                if (
+                    (!data.past_slots || data.past_slots.length === 0) &&
+                    (!data.available_slots || data.available_slots.length === 0)
+                ) {
+                    slotsContainer.innerHTML = '<p>Bu tarihte uygun saat bulunmamaktadır veya dükkan kapalıdır.</p>';
+                } else if (!data.available_slots || data.available_slots.length === 0) {
+                    const msg = document.createElement('p');
+                    msg.style.gridColumn = '1 / -1';
+                    msg.style.color = '#94a3b8';
+                    msg.style.fontSize = '0.9rem';
+                    msg.style.marginTop = '0.5rem';
+                    msg.textContent = 'Bugün için müsait saat kalmamıştır.';
+                    slotsContainer.appendChild(msg);
+                }
+            })
+            .catch(err => {
+                slotsContainer.innerHTML = '<p>Bir hata oluştu.</p>';
+            });
+    }
+    
+    function selectSlot(slot, btnElement) {
+        Array.from(slotsContainer.children).forEach(child => {
+            if (!child.classList.contains('slot-past') && !child.classList.contains('slot-booked')) {
+                child.style.background = 'rgba(255,255,255,0.1)';
+                child.style.borderColor = 'var(--border-color)';
+            }
+        });
+        
+        btnElement.style.background = 'var(--primary-color)';
+        btnElement.style.borderColor = 'var(--primary-color)';
+        
+        selectedTimeInput.value = slot;
+        selectedTimeDisplay.textContent = slot;
+        bookingForm.style.display = 'block';
+        
+        bookingForm.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    bookBtn.onclick = () => {
+        const name = document.getElementById('customerName').value;
+        const phone = document.getElementById('customerPhone').value;
+        const service = document.getElementById('serviceType').value;
+        const date = dateSelect.value;
+        const time = selectedTimeInput.value;
+        
+        if(!name || !phone) {
+            alert('Lütfen ad ve telefon alanlarını doldurun.');
+            return;
+        }
+        
+        bookBtn.disabled = true;
+        bookBtn.textContent = 'İşleniyor...';
+        
+        fetch('/api/book', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                barber_id: barberId,
+                name: name,
+                phone: phone,
+                service: service,
+                date: date,
+                time: time
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert(data.message);
+                window.location.href = '/';
+            } else {
+                alert(data.error);
+                bookBtn.disabled = false;
+                bookBtn.textContent = 'Randevu Al';
+                fetchSlots();
+            }
+        });
+    };
+    
+    fetchSlots();
+    dateSelect.addEventListener('change', fetchSlots);
+</script>
+{% endblock %}

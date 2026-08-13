@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="text-align: center; margin-bottom: 3rem;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Hoş Geldiniz, Dilediğiniz Berberi Seçin</h1>
+    <p style="font-size: 1.1rem; color: #94a3b8;">Randevu almak için aşağıdan ustanızı veya çalışanımızı seçin.</p>
+</div>
+
+<div class="barber-grid">
+    {% for barber in barbers %}
+    <a href="/barber/{{ barber.id }}" class="barber-card glass">
+        {% if barber.profile_photo == 'default.png' %}
+            <div class="barber-avatar" style="display:flex; align-items:center; justify-content:center; background: var(--card-bg); font-size: 3rem;">
+                👤
+            </div>
+        {% else %}
+            <img src="{{ url_for('static', filename='images/profiles/' + barber.profile_photo) }}" alt="{{ barber.name }}" class="barber-avatar">
+        {% endif %}
+        <h3 style="margin-bottom: 0.5rem;">{{ barber.name }}</h3>
+        <p style="color: var(--primary-color); font-weight: 600; margin: 0;">
+            {{ 'Usta' if barber.role == 'admin' else 'Çalışan' }}
+        </p>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

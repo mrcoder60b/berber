@@ -1,0 +1,157 @@
+{% extends 'dashboard_base.html' %}
+{% block dashboard_content %}
+<h2>Randevularım (Bugün)</h2>
+<p style="color: #94a3b8; margin-bottom: 1.5rem;">Hoş geldin, {{ user.name }}</p>
+
+<!-- WhatsApp Action Popup -->
+<div id="waPopupOverlay" onclick="closeWaPopup()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:500; backdrop-filter:blur(4px);"></div>
+<div id="waPopup" style="display:none; position:fixed; bottom:-200px; left:50%; transform:translateX(-50%); width:min(340px, 90vw); background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px 18px 0 0; z-index:600; padding:1.5rem 1.25rem 2rem; transition:bottom 0.3s ease; box-shadow:0 -8px 40px rgba(0,0,0,0.4);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+        <div>
+            <p style="margin:0; font-size:0.8rem; color:#94a3b8;">WhatsApp</p>
+            <p id="waPopupName" style="margin:0; font-weight:700; font-size:1.05rem;"></p>
+            <p id="waPopupPhone" style="margin:0; font-size:0.88rem; color:var(--primary-color);"></p>
+        </div>
+        <button onclick="closeWaPopup()" style="background:rgba(255,255,255,0.08); border:none; color:var(--text-color); border-radius:50%; width:34px; height:34px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+    </div>
+    <div style="display:flex; gap:0.75rem;">
+        <a id="waChatBtn" href="#" target="_blank" rel="noopener"
+           style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.4rem; padding:1rem 0.5rem; background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.35); border-radius:12px; text-decoration:none; color:var(--text-color); font-weight:600; font-size:0.88rem; transition:background 0.2s;">
+            <span style="font-size:1.8rem;">💬</span>
+            Mesaj Gönder
+        </a>
+        <a id="waCallBtn" href="#" target="_blank" rel="noopener"
+           style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.4rem; padding:1rem 0.5rem; background:rgba(37,211,102,0.15); border:1px solid rgba(37,211,102,0.35); border-radius:12px; text-decoration:none; color:var(--text-color); font-weight:600; font-size:0.88rem; transition:background 0.2s;">
+            <span style="font-size:1.8rem;">📞</span>
+            Sesli Ara
+        </a>
+    </div>
+</div>
+
+{% if appointments %}
+    <div class="appt-table-wrapper" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 0.85rem 1rem;">Saat</th>
+                    <th style="padding: 0.85rem 1rem;">Müşteri</th>
+                    <th style="padding: 0.85rem 1rem;">Telefon</th>
+                    <th style="padding: 0.85rem 1rem;">Hizmet</th>
+                    <th style="padding: 0.85rem 1rem;">Durum</th>
+                    <th style="padding: 0.85rem 1rem;">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 0.85rem 1rem; font-weight: 600;" data-label="Saat">{{ appt.time }}</td>
+                    <td style="padding: 0.85rem 1rem;" data-label="Müşteri">{{ appt.customer_name }}</td>
+                    <td style="padding: 0.85rem 1rem;" data-label="Telefon">
+                        <button onclick="openWaPopup('{{ appt.customer_name }}', '{{ appt.customer_phone }}')"
+                            style="background:rgba(37,211,102,0.12); border:1px solid rgba(37,211,102,0.3); color:#25d366; padding:0.35rem 0.75rem; border-radius:20px; font-family:inherit; font-weight:600; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; transition:background 0.2s; white-space:nowrap;"
+                            onmouseover="this.style.background='rgba(37,211,102,0.25)'"
+                            onmouseout="this.style.background='rgba(37,211,102,0.12)'">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#25d366" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            {{ appt.customer_phone }}
+                        </button>
+                    </td>
+                    <td style="padding: 0.85rem 1rem;" data-label="Hizmet">{{ appt.service_type }}</td>
+                    <td style="padding: 0.85rem 1rem;" data-label="Durum">
+                        {% if appt.status == 'pending' %}
+                            <span style="color: #eab308;">Bekliyor</span>
+                        {% elif appt.status == 'cancelled' %}
+                            <span style="color: #ef4444;">İptal Edildi</span>
+                        {% else %}
+                            <span style="color: #22c55e;">Tamamlandı</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 0.85rem 1rem;" data-label="İşlem">
+                        {% if appt.status == 'pending' %}
+                        <button onclick="cancelAppt({{ appt.id }})" class="btn btn-danger" style="padding: 0.45rem 0.9rem; font-size: 0.82rem;">İptal Et</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-warning">Bugün için randevunuz bulunmamaktadır.</div>
+{% endif %}
+
+<script>
+/* ── WhatsApp helpers ── */
+function formatWaNumber(raw) {
+    // Remove all non-digit characters
+    let digits = raw.replace(/\D/g, '');
+    // Turkish numbers: if starts with 0, replace with country code 90
+    if (digits.startsWith('0')) {
+        digits = '90' + digits.slice(1);
+    }
+    // If doesn't start with 90 and is 10 digits (e.g. 5xxxxxxxxx), prepend 90
+    if (!digits.startsWith('90') && digits.length === 10) {
+        digits = '90' + digits;
+    }
+    return digits;
+}
+
+function openWaPopup(name, phone) {
+    const waNum = formatWaNumber(phone);
+    document.getElementById('waPopupName').textContent = name;
+    document.getElementById('waPopupPhone').textContent = phone;
+    document.getElementById('waChatBtn').href = 'https://wa.me/' + waNum;
+    document.getElementById('waCallBtn').href  = 'https://wa.me/' + waNum + '?phone=' + waNum;
+
+    const overlay = document.getElementById('waPopupOverlay');
+    const popup   = document.getElementById('waPopup');
+    overlay.style.display = 'block';
+    popup.style.display   = 'block';
+    // Animate up
+    requestAnimationFrame(() => { popup.style.bottom = '0'; });
+}
+
+function closeWaPopup() {
+    const popup = document.getElementById('waPopup');
+    popup.style.bottom = '-200px';
+    setTimeout(() => {
+        document.getElementById('waPopupOverlay').style.display = 'none';
+        popup.style.display = 'none';
+    }, 300);
+}
+
+/* Close on Escape */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWaPopup(); });
+
+/* ── Cancel appointment ── */
+function cancelAppt(id) {
+    if(confirm('Bu randevuyu iptal etmek istediğinize emin misiniz? Müşteri gelmediyse veya geç kaldıysa iptal edebilirsiniz.')) {
+        fetch('/dashboard/cancel/' + id, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('İptal işlemi başarısız.');
+            }
+        });
+    }
+}
+
+/* ── Otomatik geç iptal kontrolü (her 60 saniyede bir) ── */
+function checkAutoCancels() {
+    fetch('/api/auto-cancel', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.cancelled_count > 0) {
+                // İptal edilen randevu varsa sayfayı yenile
+                location.reload();
+            }
+        })
+        .catch(() => {}); // Sessizce geç, bağlantı hatası olursa bir şey yapma
+}
+
+// Sayfa açılınca hemen bir kontrol yap, sonra her 60 saniyede bir tekrarla
+checkAutoCancels();
+setInterval(checkAutoCancels, 60 * 1000);
+</script>
+{% endblock %}

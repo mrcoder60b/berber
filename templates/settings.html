@@ -1,0 +1,34 @@
+{% extends 'dashboard_base.html' %}
+{% block dashboard_content %}
+<h2>Dükkan Ayarları</h2>
+<p style="color: #94a3b8; margin-bottom: 2rem;">Çalışma saatleri ve kapalı günleri belirleyin. Tüm berberlerin randevu sistemi buna göre ayarlanır.</p>
+
+<form method="POST" class="glass" style="padding: 1.5rem; max-width: 600px;">
+    <div style="display: flex; gap: 1rem;">
+        <div class="form-group" style="flex: 1;">
+            <label>Açılış Saati</label>
+            <input type="time" name="open_time" class="form-control" value="{{ settings.shop_open_time }}" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label>Kapanış Saati</label>
+            <input type="time" name="close_time" class="form-control" value="{{ settings.shop_close_time }}" required>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label>Kapalı Günler</label>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem;">Çoklu seçim için CTRL (Windows) veya CMD (Mac) basılı tutunuz.</p>
+        <select name="closed_days" class="form-control" multiple style="height: 150px;">
+            <option value="0" {% if '0' in settings.closed_days.split(',') %}selected{% endif %}>Pazartesi</option>
+            <option value="1" {% if '1' in settings.closed_days.split(',') %}selected{% endif %}>Salı</option>
+            <option value="2" {% if '2' in settings.closed_days.split(',') %}selected{% endif %}>Çarşamba</option>
+            <option value="3" {% if '3' in settings.closed_days.split(',') %}selected{% endif %}>Perşembe</option>
+            <option value="4" {% if '4' in settings.closed_days.split(',') %}selected{% endif %}>Cuma</option>
+            <option value="5" {% if '5' in settings.closed_days.split(',') %}selected{% endif %}>Cumartesi</option>
+            <option value="6" {% if '6' in settings.closed_days.split(',') %}selected{% endif %}>Pazar</option>
+        </select>
+    </div>
+    
+    <button type="submit" class="btn btn-primary" style="width: 100%;">Ayarları Kaydet</button>
+</form>
+{% endblock %}
