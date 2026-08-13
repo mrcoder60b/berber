@@ -86,10 +86,16 @@ def setup():
 def index():
     conn = get_db()
     barbers = conn.execute('SELECT * FROM user WHERE is_active = 1').fetchall()
+    settings = conn.execute('SELECT * FROM settings LIMIT 1').fetchone()
     conn.close()
-    return render_template('index.html', barbers=barbers)
+    return render_template('index.html', barbers=barbers, settings=settings)
+
+@app.route('/fiyat-listesi')
+def fiyat_listesi():
+    return render_template('fiyat_listesi.html')
 
 @app.route('/barber/<int:barber_id>')
+
 def barber_calendar(barber_id):
     conn = get_db()
     barber = conn.execute('SELECT * FROM user WHERE id = ?', (barber_id,)).fetchone()
@@ -291,6 +297,27 @@ def manage_employees():
     conn.close()
     return render_template('employees.html', employees=employees)
 
+
+@app.route('/dashboard/employees/delete/<int:emp_id>', methods=['POST'])
+def delete_employee(emp_id):
+    """Çalışanı sistemden kalıcı olarak siler. Sadece admin erişebilir."""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'error': 'Yetkisiz erişim.'}), 403
+
+    conn = get_db()
+    emp = conn.execute("SELECT * FROM user WHERE id = ? AND role = 'employee'", (emp_id,)).fetchone()
+    if not emp:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Çalışan bulunamadı.'}), 404
+
+    # Çalışana ait bekleyen/onaylı randevuları iptal et
+    conn.execute("UPDATE appointment SET status = 'cancelled' WHERE barber_id = ? AND status IN ('pending', 'confirmed')", (emp_id,))
+    # Çalışanı sil
+    conn.execute("DELETE FROM user WHERE id = ?", (emp_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
 @app.route('/dashboard/settings', methods=['GET', 'POST'])
 def manage_settings():
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -298,16 +325,24 @@ def manage_settings():
         
     conn = get_db()
     if request.method == 'POST':
-        open_time = request.form.get('open_time')
-        close_time = request.form.get('close_time')
-        days = request.form.getlist('closed_days')
+        open_time   = request.form.get('open_time')
+        close_time  = request.form.get('close_time')
+        days        = request.form.getlist('closed_days')
         closed_days_str = ','.join(days)
-        
-        conn.execute('UPDATE settings SET shop_open_time = ?, shop_close_time = ?, closed_days = ?',
-                     (open_time, close_time, closed_days_str))
+        shop_name   = request.form.get('shop_name', '').strip()
+        shop_address= request.form.get('shop_address', '').strip()
+        shop_phone  = request.form.get('shop_phone', '').strip()
+
+        conn.execute(
+            '''UPDATE settings
+               SET shop_open_time=?, shop_close_time=?, closed_days=?,
+                   shop_name=?, shop_address=?, shop_phone=?
+               WHERE id = (SELECT id FROM settings LIMIT 1)''',
+            (open_time, close_time, closed_days_str, shop_name, shop_address, shop_phone)
+        )
         conn.commit()
         flash('Ayarlar güncellendi.', 'success')
-        
+
     settings = conn.execute('SELECT * FROM settings LIMIT 1').fetchone()
     conn.close()
     return render_template('settings.html', settings=settings)

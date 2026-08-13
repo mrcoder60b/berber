@@ -18,6 +18,7 @@
     <div class="mobile-nav-drawer" id="mobileNavDrawer">
         <button class="mobile-nav-drawer-close" onclick="closeMobileNav()" aria-label="Kapat">✕</button>
         <a href="/" onclick="closeMobileNav()">🏠 Ana Sayfa</a>
+        <a href="/fiyat-listesi" onclick="closeMobileNav()">💈 Fiyat Listesi</a>
         {% if session.get('user_id') %}
             <a href="/dashboard" onclick="closeMobileNav()">📋 Panel</a>
             <a href="/logout" onclick="closeMobileNav()">🚪 Çıkış Yap</a>
@@ -31,6 +32,7 @@
         <a href="/" class="nav-brand">✂️ Berberim</a>
         <div class="nav-links">
             <a href="/">Ana Sayfa</a>
+            <a href="/fiyat-listesi">💈 Fiyat Listesi</a>
             {% if session.get('user_id') %}
                 <a href="/dashboard">Panel</a>
                 <a href="/logout">Çıkış Yap</a>

@@ -22,4 +22,163 @@
     </a>
     {% endfor %}
 </div>
+
+<!-- ── Konum & İletişim bölümü (her zaman görünür) ── -->
+<section class="location-section" id="konum" aria-label="Konum ve İletişim">
+
+    <div class="location-header">
+        <h2 class="location-title">📍 Konum &amp; İletişim</h2>
+        <p class="location-subtitle">Bizi kolayca bulun, yol tarifi alın.</p>
+    </div>
+
+    <div class="location-wrapper">
+
+        <!-- ── Sol: Harita ── -->
+        <div class="location-map-col">
+
+            <div class="map-frame-wrapper glass">
+                {% set map_query = '' %}
+                {% if settings %}
+                    {% if settings.shop_address %}
+                        {% set map_query = settings.shop_address %}
+                    {% elif settings.shop_name %}
+                        {% set map_query = settings.shop_name %}
+                    {% endif %}
+                {% endif %}
+
+                {% if map_query %}
+                    <!-- Google Maps embed — adres bazlı arama -->
+                    <iframe
+                        id="berber-maps-iframe"
+                        class="map-frame"
+                        src="https://maps.google.com/maps?q={{ map_query | urlencode }}&hl=tr&z=15&output=embed"
+                        width="100%"
+                        height="100%"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Berber Dükkanı Konumu">
+                    </iframe>
+                {% else %}
+                    <!-- Adres girilmemiş — bilgi mesajı -->
+                    <div class="map-placeholder">
+                        <span style="font-size:3rem;">🗺️</span>
+                        <p style="margin:0.75rem 0 0.25rem; font-weight:600;">Harita henüz ayarlanmadı</p>
+                        <p style="font-size:0.85rem; opacity:0.6;">
+                            Admin paneli → Ayarlar → Adres bölümünü doldurun.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Yol Tarifi Butonu -->
+            <button
+                id="directions-btn"
+                class="btn btn-primary directions-btn"
+                data-query="{{ map_query | urlencode }}"
+                type="button"
+                aria-label="Google Haritalar'da Yol Tarifi Al">
+                🗺️ Yol Tarifi Al &amp; Google Haritalar'da Aç
+            </button>
+
+        </div>
+
+        <!-- ── Sağ: İletişim Kartı ── -->
+        <div class="location-info-col">
+            <div class="contact-card glass">
+
+                <!-- Dükkan Adı -->
+                <div class="contact-card-header">
+                    <span class="contact-icon">✂️</span>
+                    <div>
+                        <h3 class="contact-shop-name">
+                            {% if settings and settings.shop_name %}
+                                {{ settings.shop_name }}
+                            {% else %}
+                                Berber Salonu
+                            {% endif %}
+                        </h3>
+                        <span class="contact-badge">Açık</span>
+                    </div>
+                </div>
+
+                <hr class="contact-divider">
+
+                <!-- Adres -->
+                <div class="contact-row">
+                    <span class="contact-row-icon" aria-hidden="true">📍</span>
+                    <div>
+                        <p class="contact-row-label">Adres</p>
+                        <p class="contact-row-value">
+                            {% if settings and settings.shop_address %}
+                                {{ settings.shop_address }}
+                            {% else %}
+                                <span style="opacity:0.45; font-style:italic;">—</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Telefon -->
+                <div class="contact-row">
+                    <span class="contact-row-icon" aria-hidden="true">📞</span>
+                    <div>
+                        <p class="contact-row-label">Telefon</p>
+                        {% if settings and settings.shop_phone %}
+                            <a href="tel:{{ settings.shop_phone }}" class="contact-row-value contact-link">
+                                {{ settings.shop_phone }}
+                            </a>
+                        {% else %}
+                            <p class="contact-row-value" style="opacity:0.45; font-style:italic;">—</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Çalışma Saatleri -->
+                <div class="contact-row">
+                    <span class="contact-row-icon" aria-hidden="true">🕐</span>
+                    <div>
+                        <p class="contact-row-label">Çalışma Saatleri</p>
+                        <p class="contact-row-value">
+                            {% if settings %}
+                                Pzt – Cmt: {{ settings.shop_open_time }} – {{ settings.shop_close_time }}
+                            {% else %}
+                                09:00 – 20:00
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Yol Tarifi Butonu (kart içi) -->
+                <button
+                    class="btn btn-primary directions-btn directions-btn-sm"
+                    data-query="{{ map_query | urlencode }}"
+                    type="button"
+                    aria-label="Google Haritalar'da Yol Tarifi Al">
+                    📍 Yol Tarifi Al
+                </button>
+
+            </div>
+        </div>
+
+    </div><!-- /location-wrapper -->
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll('.directions-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var query = decodeURIComponent(btn.getAttribute('data-query') || '');
+            if (!query) {
+                alert('Adres henüz ayarlanmamış. Admin panelinden ekleyin.');
+                return;
+            }
+            var url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        });
+    });
+</script>
 {% endblock %}

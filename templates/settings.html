@@ -1,9 +1,39 @@
 {% extends 'dashboard_base.html' %}
 {% block dashboard_content %}
 <h2>Dükkan Ayarları</h2>
-<p style="color: #94a3b8; margin-bottom: 2rem;">Çalışma saatleri ve kapalı günleri belirleyin. Tüm berberlerin randevu sistemi buna göre ayarlanır.</p>
+<p style="color: #94a3b8; margin-bottom: 2rem;">Çalışma saatleri, iletişim bilgileri ve kapalı günleri buradan yönetin.</p>
 
 <form method="POST" class="glass" style="padding: 1.5rem; max-width: 600px;">
+
+    <!-- ── Dükkan İletişim Bilgileri ── -->
+    <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em;">📍 İletişim Bilgileri</h3>
+
+    <div class="form-group">
+        <label>Dükkan Adı</label>
+        <input type="text" name="shop_name" class="form-control"
+               placeholder="Örn: Usta Ahmet Berber Salonu"
+               value="{{ settings.shop_name or '' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Adres</label>
+        <input type="text" name="shop_address" class="form-control"
+               placeholder="Örn: Atatürk Cad. No:12, Kadıköy / İstanbul"
+               value="{{ settings.shop_address or '' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Telefon Numarası</label>
+        <input type="tel" name="shop_phone" class="form-control"
+               placeholder="Örn: +90 (212) 555 55 55"
+               value="{{ settings.shop_phone or '' }}">
+    </div>
+
+    <hr style="border: none; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+    <!-- ── Çalışma Saatleri ── -->
+    <h3 style="margin-bottom: 1rem; font-size: 1rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em;">🕐 Çalışma Saatleri</h3>
+
     <div style="display: flex; gap: 1rem;">
         <div class="form-group" style="flex: 1;">
             <label>Açılış Saati</label>
@@ -14,7 +44,7 @@
             <input type="time" name="close_time" class="form-control" value="{{ settings.shop_close_time }}" required>
         </div>
     </div>
-    
+
     <div class="form-group">
         <label>Kapalı Günler</label>
         <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem;">Çoklu seçim için CTRL (Windows) veya CMD (Mac) basılı tutunuz.</p>
@@ -28,7 +58,7 @@
             <option value="6" {% if '6' in settings.closed_days.split(',') %}selected{% endif %}>Pazar</option>
         </select>
     </div>
-    
+
     <button type="submit" class="btn btn-primary" style="width: 100%;">Ayarları Kaydet</button>
 </form>
 {% endblock %}

@@ -318,6 +318,11 @@ select.form-control {
 .alert-success { background: rgba(34, 197, 94, 0.2);  border: 1px solid #22c55e; color: #86efac; }
 .alert-warning { background: rgba(234, 179, 8, 0.2);  border: 1px solid #eab308; color: #fde047; }
 
+/* Light tema — alert renkleri koyu arka plan üzerine tasarlandığı için light'ta düzelt */
+[data-theme="light"] .alert-danger  { background: #fef2f2; border-color: #f87171; color: #b91c1c; }
+[data-theme="light"] .alert-success { background: #f0fdf4; border-color: #4ade80; color: #15803d; }
+[data-theme="light"] .alert-warning { background: #fefce8; border-color: #ca8a04; color: #854d0e; }
+
 /* ========================
    DASHBOARD LAYOUT
    ======================== */
@@ -572,3 +577,243 @@ select.form-control {
         font-size: 1.1rem !important;
     }
 }
+
+/* ================================================================
+   KONUM VE İLETİŞİM BÖLÜMİ  —  Location & Contact Section
+   ================================================================ */
+
+/* Bölümün tamamı */
+.location-section {
+    margin-top: 4rem;
+    padding-bottom: 2rem;
+}
+
+/* Başlık alanı */
+.location-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.location-title {
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.4rem;
+}
+
+.location-subtitle {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* İki sütunlu düzen: sol harita, sağ iletişim kartı */
+.location-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 1.75rem;
+    align-items: start;
+}
+
+/* ── Sol Sütun: Harita + Büyük Buton ── */
+.location-map-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Harita iframe sarmalayıcı */
+.map-frame-wrapper {
+    width: 100%;
+    height: 380px;
+    overflow: hidden;
+    padding: 0;         /* iframe'e padding uygulanmaz */
+    border-radius: 16px;
+    position: relative;
+}
+
+/* Harita iframe'in kendisi */
+.map-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    border-radius: 16px;
+}
+
+/* Ana "Yol Tarifi Al" butonu — haritanın altında tam genişlik */
+.directions-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    letter-spacing: 0.02em;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+}
+
+.directions-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+}
+
+/* ── Sağ Sütun: İletişim Kartı ── */
+.contact-card {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* Kart üst satırı: ikon + isim + rozet */
+.contact-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.contact-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.contact-shop-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+    line-height: 1.2;
+}
+
+/* "Açık" rozeti */
+.contact-badge {
+    display: inline-block;
+    background: rgba(34, 197, 94, 0.18);
+    border: 1px solid #22c55e;
+    color: #86efac;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 20px;
+}
+
+/* Ayraç çizgisi */
+.contact-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 0;
+}
+
+/* Her bilgi satırı (ikon + etiket + değer) */
+.contact-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.contact-row-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.contact-row-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--primary-color);
+    margin: 0 0 0.2rem 0;
+}
+
+.contact-row-value {
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Telefon linki stili */
+.contact-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.contact-link:hover {
+    color: var(--primary-color);
+}
+
+/* Kartın içindeki küçük buton */
+.directions-btn-sm {
+    margin-top: 0.25rem;
+    font-size: 0.92rem;
+    padding: 0.7rem 1rem;
+}
+
+/* ================================================================
+   KONUM BÖLÜMİ — RESPONSIVE  (Tablet)
+   ================================================================ */
+@media (max-width: 900px) {
+    .location-wrapper {
+        grid-template-columns: 1fr;   /* Tek sütun */
+    }
+
+    .map-frame-wrapper {
+        height: 320px;
+    }
+}
+
+/* ================================================================
+   KONUM BÖLÜMİ — RESPONSIVE  (Mobil)
+   ================================================================ */
+@media (max-width: 600px) {
+    .location-section {
+        margin-top: 2.5rem;
+    }
+
+    .location-title {
+        font-size: 1.4rem !important;
+    }
+
+    .map-frame-wrapper {
+        height: 260px;
+    }
+
+    .directions-btn {
+        font-size: 0.92rem;
+        padding: 0.8rem 1rem;
+    }
+
+    .contact-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .contact-shop-name {
+        font-size: 1.05rem;
+    }
+}
+
+/* Harita placeholder (adres girilmemiş) */
+.map-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+

@@ -38,7 +38,10 @@ def init_db():
             shop_open_time TEXT DEFAULT '09:00',
             shop_close_time TEXT DEFAULT '20:00',
             closed_days TEXT DEFAULT '6',
-            slot_duration INTEGER DEFAULT 30
+            slot_duration INTEGER DEFAULT 30,
+            shop_name TEXT DEFAULT '',
+            shop_address TEXT DEFAULT '',
+            shop_phone TEXT DEFAULT ''
         );
 
         CREATE TABLE IF NOT EXISTS blocked_time (
@@ -52,7 +55,18 @@ def init_db():
 
     # Settings tablosunda veri yoksa varsayilan ekle
     if conn.execute('SELECT COUNT(*) FROM settings').fetchone()[0] == 0:
-        conn.execute("INSERT INTO settings (shop_open_time, shop_close_time, closed_days, slot_duration) VALUES ('09:00', '20:00', '6', 30)")
+        conn.execute("INSERT INTO settings (shop_open_time, shop_close_time, closed_days, slot_duration, shop_name, shop_address, shop_phone) VALUES ('09:00', '20:00', '6', 30, '', '', '')")
         conn.commit()
+
+    # Mevcut DB'de yeni sütunlar yoksa ekle (migration)
+    existing_cols = [row[1] for row in conn.execute("PRAGMA table_info(settings)").fetchall()]
+    for col, definition in [
+        ('shop_name',    "TEXT DEFAULT ''"),
+        ('shop_address', "TEXT DEFAULT ''"),
+        ('shop_phone',   "TEXT DEFAULT ''"),
+    ]:
+        if col not in existing_cols:
+            conn.execute(f"ALTER TABLE settings ADD COLUMN {col} {definition}")
+    conn.commit()
 
     conn.close()
